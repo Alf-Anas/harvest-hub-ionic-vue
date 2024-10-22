@@ -10,6 +10,9 @@
       </div>
 
       <div class="py-4" />
+      <v-btn variant="tonal" color="primary">
+        Button
+      </v-btn>
 
       <v-row>
         <v-col cols="12">
