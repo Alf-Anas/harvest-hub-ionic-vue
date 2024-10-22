@@ -1,0 +1,7 @@
+{
+  "name": "harvest-hub-ionic-vue",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
+}
