@@ -7,8 +7,16 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    ActionFarmPage: typeof import('./src/components/farm/ActionFarmPage.vue')['default']
+    ActionTaskPage: typeof import('./src/components/task/ActionTaskPage.vue')['default']
+    AppBar: typeof import('./src/components/common/AppBar.vue')['default']
+    CreateFarmPage: typeof import('./src/components/farm/CreateFarmPage.vue')['default']
+    CreateTaskPage: typeof import('./src/components/task/CreateTaskPage.vue')['default']
+    FarmPage: typeof import('./src/components/farm/FarmPage.vue')['default']
+    HomePage: typeof import('./src/components/HomePage.vue')['default']
+    LoginPage: typeof import('./src/components/LoginPage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TaskPage: typeof import('./src/components/task/TaskPage.vue')['default']
   }
 }

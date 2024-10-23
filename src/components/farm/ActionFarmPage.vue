@@ -9,7 +9,7 @@
         <h1 class="text-h2 font-weight-bold">Vuetify</h1>
       </div>
 
-      <div class="py-4" />
+      <div class="py-4 tw-bg-green-500" />
       <v-btn variant="tonal" color="primary">
         Button
       </v-btn>
