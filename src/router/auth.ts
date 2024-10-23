@@ -1,36 +1,11 @@
+import { UserInterface } from "@/database/entities/user.interface";
+import {
+  getUserByEmailAndHash,
+  getUserByEmailAndPassword,
+} from "@/database/services/user.service";
 import { Preferences } from "@capacitor/preferences";
 
 const TOKEN_KEY = "token";
-
-type UserType = {
-  id: string;
-  email: string;
-  password: string;
-};
-const LIST_USER: UserType[] = [
-  {
-    id: "user001",
-    email: "user001@harvesthub.com",
-    password: "abcd1234",
-  },
-  {
-    id: "user002",
-    email: "user002@harvesthub.com",
-    password: "password",
-  },
-  {
-    id: "user003",
-    email: "user003@harvesthub.com",
-    password: "12345678",
-  },
-];
-
-function checkIfUserExist(email: string, password: string) {
-  const findUser = LIST_USER.find(
-    (user) => user.email === email && user.password === password
-  );
-  return findUser;
-}
 
 export async function login(email: string, password: string) {
   if (!email || !password) {
@@ -39,7 +14,7 @@ export async function login(email: string, password: string) {
       message: "Please enter a valid email address and password!",
     };
   }
-  const user = checkIfUserExist(email, password);
+  const user = await getUserByEmailAndPassword(email, password);
   if (!user) {
     return { status: false, message: "User Doesn't Exist!" };
   }
@@ -68,9 +43,13 @@ export async function checkLoginState() {
   if (storedToken) {
     // Decode the stored token using atob
     const decodedToken = atob(storedToken);
-    const user: UserType = JSON.parse(decodedToken);
+    const user: UserInterface = JSON.parse(decodedToken);
 
-    const isUserValid = checkIfUserExist(user.email, user.password);
+    const isUserValid = await getUserByEmailAndHash(
+      user.UserEmailAddress,
+      user.UserPassword || ""
+    );
+
     if (!isUserValid) {
       return { status: false, message: "Token invalid!" };
     }
@@ -78,5 +57,18 @@ export async function checkLoginState() {
     return { status: true, message: "Login Valid", user };
   } else {
     return { status: false, message: "Token not found!" };
+  }
+}
+
+export async function getUserFromToken() {
+  const { value: storedToken } = await Preferences.get({ key: TOKEN_KEY });
+
+  if (storedToken) {
+    const decodedToken = atob(storedToken);
+    const user: UserInterface = JSON.parse(decodedToken);
+
+    return user;
+  } else {
+    return undefined;
   }
 }

@@ -21,21 +21,22 @@ const handleLogout = async () => {
       Harvest Hub
     </v-app-bar-title>
 
-    <v-spacer></v-spacer>
-
     <v-menu>
       <template v-slot:activator="{ props }">
         <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
       </template>
 
       <v-list>
+        <v-list-item to="/farm-site">
+          Farm Site
+        </v-list-item>
+        <v-list-item to="/farm-field">
+          Farm Field
+        </v-list-item>
         <v-list-item to="/task">
           Task
         </v-list-item>
-        <v-list-item to="/farm">
-          Farm
-        </v-list-item>
-        <v-list-item @click="handleLogout">
+        <v-list-item @click="handleLogout" class="tw-text-red-500">
           Log Out
         </v-list-item>
       </v-list>

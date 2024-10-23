@@ -13,9 +13,18 @@ import "./styles/global.css";
 
 // Composables
 import { createApp } from "vue";
+import { initDB } from "./database/database";
+import { seedUsers } from "./database/services/user.service";
 
 const app = createApp(App);
-
+initDB()
+  .then((db) => {
+    seedUsers(db);
+    console.log("DB Connected!");
+  })
+  .catch((err) => {
+    console.error("DB Failed!", err);
+  });
 registerPlugins(app);
 
 app.mount("#app");
