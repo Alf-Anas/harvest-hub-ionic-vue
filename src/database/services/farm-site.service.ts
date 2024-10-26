@@ -1,7 +1,41 @@
 import { getDB, TABLE_NAME } from "../database";
-import { FarmSiteInterface } from "../entities/farm-site.interface";
+import {
+  FarmSiteIData,
+  FarmSiteInterface,
+} from "../entities/farm-site.interface";
 import { getUserFromToken } from "@/router/auth";
 import { ResponseInterface } from "../entities/response.interface";
+import { IDBPDatabase } from "idb";
+
+const LIST_FARM_SITE = [
+  {
+    name: "Merauke",
+    cropCode: 1,
+  },
+  {
+    name: "Sulawesi",
+    cropCode: 2,
+  },
+  {
+    name: "Maluku",
+    cropCode: 3,
+  },
+];
+
+export async function seedFarmSites(db: IDBPDatabase<unknown>) {
+  const farmSites = await db.getAll(TABLE_NAME.FarmSites);
+  if (farmSites.length !== 0) return;
+  for (const farmSite of LIST_FARM_SITE) {
+    const newFarmSite: FarmSiteIData = {
+      FarmSiteName: farmSite.name,
+      DefaultPrimaryCropId: farmSite.cropCode,
+      CreatedDate: new Date().toISOString(),
+      ModifiedDate: new Date().toISOString(),
+      IsDeleted: false,
+    };
+    await db.put(TABLE_NAME.FarmSites, newFarmSite);
+  }
+}
 
 export async function getAllFarmSites(
   includeDeleted = false

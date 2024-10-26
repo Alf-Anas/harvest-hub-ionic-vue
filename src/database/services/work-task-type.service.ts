@@ -1,7 +1,46 @@
 import { getDB, TABLE_NAME } from "../database";
-import { WorkTaskTypeInterface } from "../entities/work-task-type.interface";
+import {
+  WorkTaskTypeIData,
+  WorkTaskTypeInterface,
+} from "../entities/work-task-type.interface";
 import { getUserFromToken } from "@/router/auth";
 import { ResponseInterface } from "../entities/response.interface";
+import { IDBPDatabase } from "idb";
+
+const LIST_WORK_TASK_TYPE = [
+  {
+    name: "Cultivate",
+  },
+  {
+    name: "Fertilize",
+  },
+  {
+    name: "Spray",
+  },
+  {
+    name: "Irrigate",
+  },
+  {
+    name: "Plant",
+  },
+  {
+    name: "Harvest",
+  },
+];
+
+export async function seedWorkTaskTypes(db: IDBPDatabase<unknown>) {
+  const workTaskTypes = await db.getAll(TABLE_NAME.WorkTaskTypes);
+  if (workTaskTypes.length !== 0) return;
+  for (const workTaskType of LIST_WORK_TASK_TYPE) {
+    const newWorkTaskType: WorkTaskTypeIData = {
+      WorkTaskTypeCode: workTaskType.name,
+      CreatedDate: new Date().toISOString(),
+      ModifiedDate: new Date().toISOString(),
+      IsDeleted: false,
+    };
+    await db.put(TABLE_NAME.WorkTaskTypes, newWorkTaskType);
+  }
+}
 
 export async function getAllWorkTaskTypes(
   includeDeleted = false
@@ -19,14 +58,14 @@ export async function getAllWorkTaskTypes(
 }
 
 export async function getWorkTaskTypeById(
-  workTaskTypeCode: number
+  workTaskTypeId: number
 ): Promise<ResponseInterface<WorkTaskTypeInterface>> {
   const db = await getDB();
   const tx = db.transaction(TABLE_NAME.WorkTaskTypes, "readonly");
   const store = tx.objectStore(TABLE_NAME.WorkTaskTypes);
 
   const workTaskType: WorkTaskTypeInterface | undefined = await store.get(
-    workTaskTypeCode
+    workTaskTypeId
   );
   if (!workTaskType) {
     return {
@@ -42,7 +81,7 @@ export async function getWorkTaskTypeById(
 }
 
 export async function addWorkTaskType(
-  workTaskType: Omit<WorkTaskTypeInterface, "WorkTaskTypeCode">
+  workTaskType: Omit<WorkTaskTypeInterface, "WorkTaskTypeId">
 ): Promise<ResponseInterface<WorkTaskTypeInterface>> {
   const user = await getUserFromToken();
   if (!user?.UserId) {
@@ -62,11 +101,11 @@ export async function addWorkTaskType(
 
   const tx = db.transaction(TABLE_NAME.WorkTaskTypes, "readwrite");
   const store = tx.objectStore(TABLE_NAME.WorkTaskTypes);
-  const workTaskTypeCode = await store.add(newWorkTaskType);
+  const workTaskTypeId = await store.add(newWorkTaskType);
 
   await tx.done;
 
-  if (!workTaskTypeCode) {
+  if (!workTaskTypeId) {
     return {
       success: false,
       message: "Failed to Add WorkTaskType!",
@@ -75,12 +114,12 @@ export async function addWorkTaskType(
   return {
     success: true,
     message: "OK",
-    data: { ...newWorkTaskType, WorkTaskTypeCode: Number(workTaskTypeCode) },
+    data: { ...newWorkTaskType, WorkTaskTypeId: Number(workTaskTypeId) },
   };
 }
 
 export async function updateWorkTaskType(
-  workTaskTypeCode: number,
+  workTaskTypeId: number,
   updatedData: Partial<WorkTaskTypeInterface>
 ): Promise<ResponseInterface<WorkTaskTypeInterface>> {
   const user = await getUserFromToken();
@@ -96,12 +135,12 @@ export async function updateWorkTaskType(
   const tx = db.transaction(TABLE_NAME.WorkTaskTypes, "readwrite");
   const store = tx.objectStore(TABLE_NAME.WorkTaskTypes);
 
-  const existingWorkTaskType = await store.get(workTaskTypeCode);
+  const existingWorkTaskType = await store.get(workTaskTypeId);
 
   if (!existingWorkTaskType) {
     return {
       success: false,
-      message: `WorkTaskType with ID ${workTaskTypeCode} not found`,
+      message: `WorkTaskType with ID ${workTaskTypeId} not found`,
     };
   }
 
@@ -123,7 +162,7 @@ export async function updateWorkTaskType(
 }
 
 export async function softDeleteWorkTaskType(
-  workTaskTypeCode: number
+  workTaskTypeId: number
 ): Promise<ResponseInterface<number>> {
   const user = await getUserFromToken();
   if (!user?.UserId) {
@@ -138,12 +177,12 @@ export async function softDeleteWorkTaskType(
   const tx = db.transaction(TABLE_NAME.WorkTaskTypes, "readwrite");
   const store = tx.objectStore(TABLE_NAME.WorkTaskTypes);
 
-  const existingWorkTaskType = await store.get(workTaskTypeCode);
+  const existingWorkTaskType = await store.get(workTaskTypeId);
 
   if (!existingWorkTaskType) {
     return {
       success: false,
-      message: `WorkTaskType with ID ${workTaskTypeCode} not found`,
+      message: `WorkTaskType with ID ${workTaskTypeId} not found`,
     };
   }
 
@@ -157,6 +196,6 @@ export async function softDeleteWorkTaskType(
   return {
     success: true,
     message: "OK",
-    data: workTaskTypeCode,
+    data: workTaskTypeId,
   };
 }

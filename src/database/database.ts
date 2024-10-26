@@ -1,4 +1,8 @@
 import { IDBPDatabase, openDB } from "idb";
+import { seedUsers } from "./services/user.service";
+import { seedCrops } from "./services/crop.service";
+import { seedFarmSites } from "./services/farm-site.service";
+import { seedWorkTaskTypes } from "./services/work-task-type.service";
 
 const DB_NAME = "HarvestHub.DB";
 export const TABLE_NAME = {
@@ -13,8 +17,10 @@ export const TABLE_NAME = {
 let dbPromise: IDBPDatabase<unknown>;
 export async function initDB() {
   if (!dbPromise) {
+    let isNewDatabase = false;
     dbPromise = await openDB(DB_NAME, 1, {
       upgrade(db) {
+        isNewDatabase = true;
         if (!db.objectStoreNames.contains(TABLE_NAME.FarmSites)) {
           db.createObjectStore(TABLE_NAME.FarmSites, {
             keyPath: "FarmSiteId",
@@ -35,7 +41,7 @@ export async function initDB() {
         }
         if (!db.objectStoreNames.contains(TABLE_NAME.WorkTaskTypes)) {
           db.createObjectStore(TABLE_NAME.WorkTaskTypes, {
-            keyPath: "WorkTaskTypeCode",
+            keyPath: "WorkTaskTypeId",
             autoIncrement: true,
           });
         }
@@ -53,6 +59,12 @@ export async function initDB() {
         }
       },
     });
+    if (isNewDatabase) {
+      seedUsers(dbPromise);
+      seedCrops(dbPromise);
+      seedFarmSites(dbPromise);
+      seedWorkTaskTypes(dbPromise);
+    }
   }
 
   return dbPromise;

@@ -3,7 +3,6 @@ import LoginPage from "@/components/LoginPage.vue";
 import HomePage from "@/components/HomePage.vue";
 import FarmPage from "@/components/farm/FarmPage.vue";
 import CreateFarmPage from "@/components/farm/CreateFarmPage.vue";
-import ActionFarmPage from "@/components/farm/ActionFarmPage.vue";
 import TaskPage from "@/components/task/TaskPage.vue";
 import CreateTaskPage from "@/components/task/CreateTaskPage.vue";
 import ActionTaskPage from "@/components/task/ActionTaskPage.vue";
@@ -34,30 +33,6 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: "/farm-field/action",
-    name: "Farm Field Action",
-    component: ActionFarmPage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/farm-site",
-    name: "View Farm Site",
-    component: FarmPage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/farm-site/create",
-    name: "Create Farm Site",
-    component: CreateFarmPage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/farm-site/action",
-    name: "Farm Site Action",
-    component: ActionFarmPage,
-    meta: { requiresAuth: true },
-  },
-  {
     path: "/task",
     name: "View Task",
     component: TaskPage,
@@ -70,7 +45,7 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: "/task/action",
+    path: "/task/action/:id",
     name: "Task Action",
     component: ActionTaskPage,
     meta: { requiresAuth: true },

@@ -7,3 +7,5 @@ export interface CropInterface {
   ModifiedUserId?: number;
   IsDeleted?: boolean;
 }
+
+export type CropIData = Omit<CropInterface, "CropId">;

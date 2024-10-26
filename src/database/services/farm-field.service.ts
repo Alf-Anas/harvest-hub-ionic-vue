@@ -1,7 +1,14 @@
 import { getDB, TABLE_NAME } from "../database";
-import { FarmFieldInterface } from "../entities/farm-field.interface";
+import {
+  FarmFieldAddInterface,
+  FarmFieldFullInterface,
+  FarmFieldInterface,
+} from "../entities/farm-field.interface";
 import { getUserFromToken } from "@/router/auth";
 import { ResponseInterface } from "../entities/response.interface";
+import { getCropById } from "./crop.service";
+import { getFarmSiteById } from "./farm-site.service";
+import { getAllWorkTasksByFieldId } from "./work-task.service";
 
 export async function getAllFarmFields(
   includeDeleted = false
@@ -41,8 +48,35 @@ export async function getFarmFieldById(
   };
 }
 
+export async function getAllFarmFieldsFull(
+  includeDeleted = false
+): Promise<ResponseInterface<FarmFieldFullInterface[]>> {
+  const getFarmFields = await getAllFarmFields(includeDeleted);
+  if (!getFarmFields.success) return getFarmFields;
+
+  const listFarmFields = getFarmFields.data || [];
+  const newListFarmFields: FarmFieldFullInterface[] = [];
+
+  for (let i = 0; i < listFarmFields.length; i++) {
+    const iFarmField = listFarmFields[i];
+    const newFarmField: FarmFieldFullInterface = { ...iFarmField };
+    const farmSite = (await getFarmSiteById(iFarmField.FarmSiteId)).data;
+    if (farmSite) {
+      const crop = (await getCropById(farmSite?.DefaultPrimaryCropId)).data;
+      newFarmField.farmSite = farmSite;
+      newFarmField.crop = crop;
+    }
+    const listTask = (await getAllWorkTasksByFieldId(iFarmField.FarmFieldId))
+      .data;
+    newFarmField.tasks = listTask;
+    newListFarmFields.push(newFarmField);
+  }
+
+  return { success: true, message: "OK", data: newListFarmFields };
+}
+
 export async function addFarmField(
-  farmField: Omit<FarmFieldInterface, "FarmFieldId">
+  farmField: FarmFieldAddInterface
 ): Promise<ResponseInterface<FarmFieldInterface>> {
   const user = await getUserFromToken();
   if (!user?.UserId) {

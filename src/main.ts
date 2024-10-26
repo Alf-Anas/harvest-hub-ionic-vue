@@ -14,12 +14,10 @@ import "./styles/global.css";
 // Composables
 import { createApp } from "vue";
 import { initDB } from "./database/database";
-import { seedUsers } from "./database/services/user.service";
 
 const app = createApp(App);
 initDB()
-  .then((db) => {
-    seedUsers(db);
+  .then(() => {
     console.log("DB Connected!");
   })
   .catch((err) => {

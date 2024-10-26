@@ -8,3 +8,5 @@ export interface FarmSiteInterface {
   DefaultPrimaryCropId: number;
   IsDeleted?: boolean;
 }
+
+export type FarmSiteIData = Omit<FarmSiteInterface, "FarmSiteId">;

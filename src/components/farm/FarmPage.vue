@@ -1,116 +1,125 @@
+<script setup lang="ts">
+import { FarmFieldFullInterface } from '@/database/entities/farm-field.interface';
+import { getAllFarmFieldsFull, softDeleteFarmField } from '@/database/services/farm-field.service';
+import { onMounted, ref, toRaw } from 'vue';
+
+const snackbar = ref({ snackbar: false, text: "", color: "green" })
+const farmFields = ref<FarmFieldFullInterface[]>([]);
+
+const fetchFarmFields = async () => {
+  const listFarmField = await getAllFarmFieldsFull();
+  farmFields.value = listFarmField.data || [];
+};
+
+onMounted(() => {
+  fetchFarmFields();
+});
+
+function onClickDelete(item: FarmFieldFullInterface) {
+  softDeleteFarmField(item.FarmFieldId).then((res) => {
+    if (res.success) {
+      snackbar.value = {
+        color: "green", snackbar: true, text: res.message
+      }
+      fetchFarmFields()
+    } else {
+      snackbar.value = {
+        color: "red", snackbar: true, text: res.message
+      }
+    }
+  }).catch((err) => {
+    snackbar.value = {
+      color: "red", snackbar: true, text: JSON.stringify(err)
+    }
+
+  })
+}
+
+
+const headers = [
+  { title: 'Field', value: 'FarmFieldName' },
+  { title: 'Farm Site', key: 'farmSite.FarmSiteName' },
+  {
+    title: 'Crop',
+    key: 'crop.CropCode',
+  },
+  {
+    title: 'Crop Year',
+    key: 'crop.CropId',
+  },
+  {
+    title: 'Size',
+    key: 'RowWidth',
+  },
+  {
+    title: 'Current Season',
+    key: 'current_season',
+    value: () => {
+      return new Date().getFullYear()
+    }
+  },
+  {
+    title: 'Last Task',
+    key: 'lastTask',
+    value: (val: any) => {
+      const row: FarmFieldFullInterface = toRaw(val)
+      const eVal = row.tasks?.length ? row.tasks[0].WorkTaskTypeCode : ''
+      return eVal
+    }
+  },
+  {
+    title: 'Next Task',
+    key: 'nextTask',
+    value: (val: any) => {
+      const row: FarmFieldFullInterface = toRaw(val)
+      const eVal = row.tasks?.length ? row.tasks[row.tasks.length - 1].WorkTaskTypeCode : ''
+      return eVal
+    }
+  },
+  {
+    title: 'Observations',
+    key: 'observations',
+  },
+  {
+    title: 'Last Season Yield',
+    key: 'lastSeasonYield',
+  },
+  {
+    title: 'Last Season CCS',
+    key: 'lastSeasonCCS',
+  },
+  {
+    title: 'Action', key: 'actions', sortable: false,
+  }
+]
+</script>
+
+
 <template>
   <v-layout>
     <app-bar />
 
     <v-main>
       <v-container fluid>
-        <v-data-table :items="items"></v-data-table>
+        <v-data-table :headers="headers" :items="farmFields">
+          <template v-slot:top>
+            <v-toolbar flat color="primary">
+              <v-toolbar-title>Farm Field</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-btn to="/farm-field/create" variant="outlined">
+                Tambah
+              </v-btn>
+            </v-toolbar>
+          </template>
+          <!-- eslint-disable-next-line vue/valid-v-slot -->
+          <template v-slot:item.actions="{ item }">
+            <v-btn color="red" density="compact" variant="outlined" @click="onClickDelete(item)">
+              Delete
+            </v-btn>
+          </template>
+        </v-data-table>
       </v-container>
+      <v-snackbar v-model="snackbar.snackbar" :text="snackbar.text" :color="snackbar.color" />
     </v-main>
   </v-layout>
 </template>
-
-<script setup lang="ts">
-const headers = [
-  { title: 'Field', value: 'field' },
-  { title: 'Farm Site', key: 'name.last' },
-  {
-    title: 'Full Name',
-    key: 'fullName',
-    // value: item => `${item.name.first} ${item.name.last}`,
-  },
-]
-const items = [
-  {
-    name: 'African Elephant',
-    species: 'Loxodonta africana',
-    diet: 'Herbivore',
-    habitat: 'Savanna, Forests',
-  },
-  {
-    name: 'Bald Eagle',
-    species: 'Haliaeetus leucocephalus',
-    diet: 'Carnivore',
-    habitat: 'Forests, Mountains, Near water',
-  },
-  {
-    name: 'Giant Panda',
-    species: 'Ailuropoda melanoleuca',
-    diet: 'Herbivore',
-    habitat: 'Bamboo forests, Mountains',
-  },
-  {
-    name: 'Grizzly Bear',
-    species: 'Ursus arctos horribilis',
-    diet: 'Omnivore',
-    habitat: 'Forests, Tundra, Mountains',
-  },
-  {
-    name: 'Koala',
-    species: 'Phascolarctos cinereus',
-    diet: 'Herbivore',
-    habitat: 'Eucalyptus forests',
-  },
-  {
-    name: 'Cheetah',
-    species: 'Acinonyx jubatus',
-    diet: 'Carnivore',
-    habitat: 'Grasslands, Savannas',
-  },
-  {
-    name: 'Blue Whale',
-    species: 'Balaenoptera musculus',
-    diet: 'Carnivore (Plankton, Krill)',
-    habitat: 'Oceans',
-  },
-  {
-    name: 'King Cobra',
-    species: 'Ophiophagus hannah',
-    diet: 'Carnivore',
-    habitat: 'Forests, Grasslands',
-  },
-  {
-    name: 'Red Kangaroo',
-    species: 'Macropus rufus',
-    diet: 'Herbivore',
-    habitat: 'Grasslands, Deserts',
-  },
-  {
-    name: 'Emperor Penguin',
-    species: 'Aptenodytes forsteri',
-    diet: 'Carnivore (Fish, Squid)',
-    habitat: 'Antarctica',
-  },
-  {
-    name: 'Siberian Tiger',
-    species: 'Panthera tigris altaica',
-    diet: 'Carnivore',
-    habitat: 'Forests, Mountains',
-  },
-  {
-    name: 'Great White Shark',
-    species: 'Carcharodon carcharias',
-    diet: 'Carnivore',
-    habitat: 'Oceans',
-  },
-  {
-    name: 'Giraffe',
-    species: 'Giraffa camelopardalis',
-    diet: 'Herbivore',
-    habitat: 'Savannas, Woodlands',
-  },
-  {
-    name: 'Snow Leopard',
-    species: 'Panthera uncia',
-    diet: 'Carnivore',
-    habitat: 'Mountains, Grasslands',
-  },
-  {
-    name: 'Green Anaconda',
-    species: 'Eunectes murinus',
-    diet: 'Carnivore',
-    habitat: 'Rainforests, Swamps',
-  },
-];
-
-</script>

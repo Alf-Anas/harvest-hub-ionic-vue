@@ -1,7 +1,34 @@
 import { getDB, TABLE_NAME } from "../database";
-import { CropInterface } from "../entities/crop.interface";
+import { CropIData, CropInterface } from "../entities/crop.interface";
 import { getUserFromToken } from "@/router/auth";
 import { ResponseInterface } from "../entities/response.interface";
+import { IDBPDatabase } from "idb";
+
+const LIST_CROP = [
+  {
+    name: "Sugar Cane",
+  },
+  {
+    name: "Oil Palms",
+  },
+  {
+    name: "SoyBeans",
+  },
+];
+
+export async function seedCrops(db: IDBPDatabase<unknown>) {
+  const crops = await db.getAll(TABLE_NAME.Crops);
+  if (crops.length !== 0) return;
+  for (const crop of LIST_CROP) {
+    const newCrop: CropIData = {
+      CropCode: crop.name,
+      CreatedDate: new Date().toISOString(),
+      ModifiedDate: new Date().toISOString(),
+      IsDeleted: false,
+    };
+    await db.put(TABLE_NAME.Crops, newCrop);
+  }
+}
 
 export async function getAllCrops(
   includeDeleted = false

@@ -9,15 +9,19 @@ const handleLogout = async () => {
     router.push("/login")
   })
 };
+
+const handleHome = () => {
+  router.push("/")
+};
 </script>
 
 
 <template>
   <v-app-bar color="green-darken-3">
     <template v-slot:prepend>
-      <v-img class="tw-ml-4" width="48" src="@/assets/logo.png"></v-img>
+      <v-img class="tw-ml-4 tw-cursor-pointer" width="48" src="@/assets/logo.png" @click="handleHome" />
     </template>
-    <v-app-bar-title>
+    <v-app-bar-title class="tw-cursor-pointer" @click="handleHome">
       Harvest Hub
     </v-app-bar-title>
 
@@ -27,9 +31,6 @@ const handleLogout = async () => {
       </template>
 
       <v-list>
-        <v-list-item to="/farm-site">
-          Farm Site
-        </v-list-item>
         <v-list-item to="/farm-field">
           Farm Field
         </v-list-item>

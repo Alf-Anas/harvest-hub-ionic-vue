@@ -1,7 +1,15 @@
 import { getDB, TABLE_NAME } from "../database";
-import { WorkTaskInterface } from "../entities/work-task.interface";
+import {
+  WorkTaskAddInterface,
+  WorkTaskFullInterface,
+  WorkTaskIData,
+  WorkTaskInterface,
+} from "../entities/work-task.interface";
 import { getUserFromToken } from "@/router/auth";
 import { ResponseInterface } from "../entities/response.interface";
+import { getFarmFieldById } from "./farm-field.service";
+import { getCropById } from "./crop.service";
+import { getFarmSiteById } from "./farm-site.service";
 
 export async function getAllWorkTasks(
   includeDeleted = false
@@ -15,6 +23,59 @@ export async function getAllWorkTasks(
   const theData: WorkTaskInterface[] = includeDeleted
     ? workTasks
     : workTasks.filter((site) => !site.IsDeleted);
+  return { success: true, message: "OK", data: theData };
+}
+
+export async function getAllWorkTasksFull(
+  includeDeleted = false
+): Promise<ResponseInterface<WorkTaskFullInterface[]>> {
+  const db = await getDB();
+  const tx = db.transaction(TABLE_NAME.WorkTasks, "readonly");
+  const store = tx.objectStore(TABLE_NAME.WorkTasks);
+
+  const listTask: WorkTaskInterface[] = await store.getAll();
+  const workTasks: WorkTaskInterface[] = includeDeleted
+    ? listTask
+    : listTask.filter((site) => !site.IsDeleted);
+
+  const newListTask: WorkTaskFullInterface[] = [];
+
+  for (let i = 0; i < workTasks.length; i++) {
+    const iTask = workTasks[i];
+    const newTask: WorkTaskFullInterface = { ...iTask };
+
+    const farmField = (await getFarmFieldById(iTask.FarmFieldId)).data;
+    if (farmField) {
+      newTask.field = farmField;
+      const farmSite = (await getFarmSiteById(farmField?.FarmSiteId)).data;
+      if (farmSite) {
+        newTask.site = farmSite;
+        const crop = (await getCropById(farmSite?.DefaultPrimaryCropId)).data;
+        newTask.crop = crop;
+      }
+    }
+    newListTask.push(newTask);
+  }
+
+  return { success: true, message: "OK", data: newListTask };
+}
+
+export async function getAllWorkTasksByFieldId(
+  fieldId: number,
+  includeDeleted = false
+): Promise<ResponseInterface<WorkTaskInterface[]>> {
+  const db = await getDB();
+  const tx = db.transaction(TABLE_NAME.WorkTasks, "readonly");
+  const store = tx.objectStore(TABLE_NAME.WorkTasks);
+
+  const workTasks: WorkTaskInterface[] = await store.getAll();
+  const filterById: WorkTaskInterface[] = workTasks.filter(
+    (task) => task.FarmFieldId === fieldId
+  );
+
+  const theData: WorkTaskInterface[] = includeDeleted
+    ? filterById
+    : filterById.filter((site) => !site.IsDeleted);
   return { success: true, message: "OK", data: theData };
 }
 
@@ -39,8 +100,44 @@ export async function getWorkTaskById(
   };
 }
 
+export async function getWorkTaskByIdFull(
+  workTaskId: number
+): Promise<ResponseInterface<WorkTaskInterface>> {
+  const db = await getDB();
+  const tx = db.transaction(TABLE_NAME.WorkTasks, "readonly");
+  const store = tx.objectStore(TABLE_NAME.WorkTasks);
+
+  const workTask: WorkTaskInterface | undefined = await store.get(workTaskId);
+
+  if (!workTask) {
+    return {
+      success: false,
+      message: "Data Not Found!",
+    };
+  }
+
+  const newTask: WorkTaskFullInterface = { ...workTask };
+
+  const farmField = (await getFarmFieldById(workTask.FarmFieldId)).data;
+  if (farmField) {
+    newTask.field = farmField;
+    const farmSite = (await getFarmSiteById(farmField?.FarmSiteId)).data;
+    if (farmSite) {
+      newTask.site = farmSite;
+      const crop = (await getCropById(farmSite?.DefaultPrimaryCropId)).data;
+      newTask.crop = crop;
+    }
+  }
+
+  return {
+    success: true,
+    message: "OK",
+    data: newTask,
+  };
+}
+
 export async function addWorkTask(
-  workTask: Omit<WorkTaskInterface, "WorkTaskId">
+  workTask: WorkTaskAddInterface
 ): Promise<ResponseInterface<WorkTaskInterface>> {
   const user = await getUserFromToken();
   if (!user?.UserId) {
@@ -49,7 +146,7 @@ export async function addWorkTask(
 
   const db = await getDB();
 
-  const newWorkTask = {
+  const newWorkTask: WorkTaskIData = {
     ...workTask,
     CreatedDate: new Date().toISOString(),
     CreatedUserId: user.UserId,

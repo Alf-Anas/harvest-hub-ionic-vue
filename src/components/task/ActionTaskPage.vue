@@ -1,83 +1,236 @@
-<template>
-  <v-container class="fill-height">
-    <v-responsive class="align-centerfill-height mx-auto" max-width="900">
-      <v-img class="mb-4" height="150" src="@/assets/logo.png" />
-
-      <div class="text-center">
-        <div class="text-body-2 font-weight-light mb-n1">Welcome to</div>
-
-        <h1 class="text-h2 font-weight-bold">Vuetify</h1>
-      </div>
-
-      <div class="py-4 tw-bg-green-500" />
-      <v-btn variant="tonal" color="primary">
-        Button
-      </v-btn>
-
-      <v-row>
-        <v-col cols="12">
-          <v-card class="py-4" color="surface-variant"
-            image="https://cdn.vuetifyjs.com/docs/images/one/create/feature.png"
-            prepend-icon="mdi-rocket-launch-outline" rounded="lg" variant="outlined">
-            <template #image>
-              <v-img position="top right" />
-            </template>
-
-            <template #title>
-              <h2 class="text-h5 font-weight-bold">Get started</h2>
-            </template>
-
-            <template #subtitle>
-              <div class="text-subtitle-1">
-                Replace this page by removing <v-kbd>{{ `
-                  <HelloWorld />` }}
-                </v-kbd> in <v-kbd>pages/index.vue</v-kbd>.
-              </div>
-            </template>
-
-            <v-overlay opacity=".12" scrim="primary" contained model-value persistent />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card append-icon="mdi-open-in-new" class="py-4" color="surface-variant" href="https://vuetifyjs.com/"
-            prepend-icon="mdi-text-box-outline" rel="noopener noreferrer" rounded="lg"
-            subtitle="Learn about all things Vuetify in our documentation." target="_blank" title="Documentation"
-            variant="text">
-            <v-overlay opacity=".06" scrim="primary" contained model-value persistent />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card append-icon="mdi-open-in-new" class="py-4" color="surface-variant"
-            href="https://vuetifyjs.com/introduction/why-vuetify/#feature-guides" prepend-icon="mdi-star-circle-outline"
-            rel="noopener noreferrer" rounded="lg" subtitle="Explore available framework Features." target="_blank"
-            title="Features" variant="text">
-            <v-overlay opacity=".06" scrim="primary" contained model-value persistent />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card append-icon="mdi-open-in-new" class="py-4" color="surface-variant"
-            href="https://vuetifyjs.com/components/all" prepend-icon="mdi-widgets-outline" rel="noopener noreferrer"
-            rounded="lg" subtitle="Discover components in the API Explorer." target="_blank" title="Components"
-            variant="text">
-            <v-overlay opacity=".06" scrim="primary" contained model-value persistent />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card append-icon="mdi-open-in-new" class="py-4" color="surface-variant"
-            href="https://discord.vuetifyjs.com" prepend-icon="mdi-account-group-outline" rel="noopener noreferrer"
-            rounded="lg" subtitle="Connect with Vuetify developers." target="_blank" title="Community" variant="text">
-            <v-overlay opacity=".06" scrim="primary" contained model-value persistent />
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-responsive>
-  </v-container>
-</template>
-
 <script setup lang="ts">
-//
+import { WorkTaskFullInterface, WorkTaskInterface } from '@/database/entities/work-task.interface';
+import { getWorkTaskByIdFull, updateWorkTask } from '@/database/services/work-task.service';
+import { getDateLabel, getDateTimeLabel } from '@/utils';
+import { onMounted, ref, toRaw } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+const route = useRoute();
+const id = route.params.id;
+const router = useRouter()
+const snackbar = ref({ snackbar: false, text: "", color: "green" })
+const onBehalfOf = ref('MySelf');
+const actionDateTime = ref(getDateTimeLabel(new Date().toISOString()));
+const action = ref<string>("");
+const task = ref<WorkTaskFullInterface>();
+
+const fetchTaskDetail = async () => {
+  const eData = await getWorkTaskByIdFull(Number(id));
+  task.value = eData.data
+};
+
+
+onMounted(() => {
+  fetchTaskDetail()
+});
+
+async function onClickSubmit() {
+  if (!action.value) {
+    snackbar.value = {
+      color: "red", snackbar: true, text: "Please choose Action!"
+    }
+    return
+  }
+
+  let updatedValue: Partial<WorkTaskInterface> = {}
+  if (action.value === "pause") {
+    updatedValue = {
+      StartedDate: new Date().toISOString(),
+      CancelledDate: undefined,
+      IsCancelled: false,
+      IsStarted: false,
+      IsCompleted: false,
+      IsDeleted: false,
+      WorkTaskStatusCode: "Open"
+    }
+  } else if (action.value === "start") {
+    updatedValue = {
+      StartedDate: new Date().toISOString(),
+      CancelledDate: undefined,
+      IsCancelled: false,
+      IsStarted: true,
+      IsCompleted: false,
+      IsDeleted: false,
+      WorkTaskStatusCode: "Underway"
+    }
+  } else if (action.value === "cancel") {
+    updatedValue = {
+      CancelledDate: new Date().toISOString(),
+      IsCancelled: true,
+      IsStarted: false,
+      IsCompleted: false,
+      IsDeleted: false,
+      WorkTaskStatusCode: "Open"
+    }
+  } else if (action.value === "complete") {
+    updatedValue = {
+      CancelledDate: undefined,
+      IsCancelled: false,
+      IsStarted: false,
+      IsCompleted: true,
+      IsDeleted: false,
+      WorkTaskStatusCode: "Complete"
+    }
+  }
+
+
+  updateWorkTask(Number(id), updatedValue)
+    .then((res) => {
+      if (res.success) {
+        snackbar.value = {
+          color: "green", snackbar: true, text: res.message
+        }
+        setTimeout(() => {
+          router.push("/task")
+        }, 850)
+      } else {
+        snackbar.value = {
+          color: "red", snackbar: true, text: res.message
+        }
+      }
+    }).catch((err) => {
+      snackbar.value = {
+        color: "red", snackbar: true, text: JSON.stringify(err)
+      }
+    })
+}
+
+function getLastAction() {
+  const eTask = toRaw(task.value)
+  if (eTask?.IsCompleted) {
+    return "Completed"
+  } else if (eTask?.IsStarted) {
+    return "Started"
+  } else if (eTask?.IsCancelled) {
+    return "Cancelled"
+  } else if (eTask?.IsDeleted) {
+    return "Deleted"
+  } else {
+    return "Task Created"
+  }
+}
+
+function isOverdue() {
+  if (new Date().toISOString() > (task.value?.DueDate || '')) {
+    return true
+  }
+  return false
+}
+
+
 </script>
+
+
+<template>
+  <v-layout>
+    <app-bar />
+    <v-main>
+      <v-container fluid>
+        <v-container>
+          <v-toolbar flat class="tw-bg-green-500 tw-mb-4" density="compact">
+            <v-toolbar-title>Task Information <v-chip v-if="isOverdue()" color="red" variant="flat">
+                Overdue
+              </v-chip>
+            </v-toolbar-title>
+          </v-toolbar>
+          <v-row>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.WorkTaskName" label="Task Name" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.WorkTaskTypeCode" label="Task" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.field?.FarmFieldName" label="Field" readonly
+                variant="outlined" hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.site?.FarmSiteName" label="Site" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.crop?.CropCode" label="Crop" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.WorkTaskStatusCode" label="Status" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="getDateLabel(task?.DueDate || '')" label="Due Date"
+                variant="outlined" readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="getDateTimeLabel(task?.CreatedDate || '')"
+                label="Created At" variant="outlined" readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.Instruction" label="Instruction" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="task?.Attachment" label="Attachment" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="getLastAction()" label="Last Action" variant="outlined"
+                readonly hide-details="auto" />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field density="compact" :model-value="getDateTimeLabel(task?.ModifiedDate || '')"
+                label="Last Action Date" variant="outlined" readonly hide-details="auto" />
+            </v-col>
+
+          </v-row>
+        </v-container>
+        <v-form @submit.prevent="onClickSubmit">
+          <v-container>
+            <v-toolbar flat class="tw-bg-green-500 tw-mb-4" density="compact">
+              <v-toolbar-title>Task Action</v-toolbar-title>
+            </v-toolbar>
+            <v-row>
+              <v-col class="py-2" cols="12">
+                <div class="tw-w-full tw-text-center">
+                  <v-btn-toggle v-model="action" color="green" rounded="0" group>
+                    <v-btn value="start" variant="outlined">
+                      START this Task
+                    </v-btn>
+                    <v-btn value="pause" variant="outlined">
+                      PAUSE this Task
+                    </v-btn>
+
+                    <v-btn value="cancel" variant="outlined">
+                      CANCEL this Task (Abandon)
+                    </v-btn>
+
+                    <v-btn value="complete" variant="outlined" color="primary">
+                      COMPLETE this Task
+                    </v-btn>
+
+                  </v-btn-toggle>
+                </div>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-select density="compact" hide-details="auto" label="On Behalf of" :items="['MySelf']"
+                  variant="outlined" v-model="onBehalfOf" />
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field density="compact" hide-details="auto" v-model="actionDateTime" label="Action Date/Time"
+                  variant="outlined" readonly />
+              </v-col>
+            </v-row>
+            <div class="tw-justify-between tw-flex">
+              <v-btn class="tw-mt-4" to="/task">Batal</v-btn>
+              <v-btn class="tw-mt-4" type="submit" color="primary">Simpan</v-btn>
+            </div>
+          </v-container>
+        </v-form>
+        <v-snackbar v-model="snackbar.snackbar" :text="snackbar.text" :color="snackbar.color" />
+      </v-container>
+    </v-main>
+
+
+  </v-layout>
+</template>
