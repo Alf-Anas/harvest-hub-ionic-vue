@@ -7,9 +7,11 @@
         "preview": "vite preview",
         "lint": "eslint . --fix --ignore-path .gitignore",
         "ionic:build": "npm run build",
-        "ionic:serve": "npm run dev"
+        "ionic:serve": "npm run dev",
+        "deploy": "vite build && gh-pages -d dist"
     },
     "dependencies": {
+        "-": "^0.0.1",
         "@capacitor/android": "6.1.2",
         "@capacitor/app": "6.0.1",
         "@capacitor/cli": "6.1.2",
@@ -23,8 +25,10 @@
         "bcrypt": "^5.1.1",
         "core-js": "^3.37.1",
         "dayjs": "^1.11.13",
+        "gh-pages": "^6.2.0",
         "idb": "^8.0.0",
         "roboto-fontface": "*",
+        "save-dev": "^0.0.1-security",
         "vue": "^3.4.31",
         "vuetify": "^3.6.11"
     },
