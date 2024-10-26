@@ -7,7 +7,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    ActionFarmPage: typeof import('./src/components/farm/ActionFarmPage.vue')['default']
     ActionTaskPage: typeof import('./src/components/task/ActionTaskPage.vue')['default']
     AppBar: typeof import('./src/components/common/AppBar.vue')['default']
     CreateFarmPage: typeof import('./src/components/farm/CreateFarmPage.vue')['default']

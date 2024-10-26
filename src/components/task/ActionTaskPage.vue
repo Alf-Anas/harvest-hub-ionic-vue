@@ -193,19 +193,20 @@ function isOverdue() {
             <v-row>
               <v-col class="py-2" cols="12">
                 <div class="tw-w-full tw-text-center">
-                  <v-btn-toggle v-model="action" color="green" rounded="0" group>
-                    <v-btn value="start" variant="outlined">
+                  <v-btn-toggle v-model="action" color="green" rounded="0" group
+                    class="tw-flex-col tw-flex tw-min-h-min sm:tw-block">
+                    <v-btn value="start" variant="outlined" class="tw-py-4">
                       START this Task
                     </v-btn>
-                    <v-btn value="pause" variant="outlined">
+                    <v-btn value="pause" variant="outlined" class="tw-py-4">
                       PAUSE this Task
                     </v-btn>
 
-                    <v-btn value="cancel" variant="outlined">
+                    <v-btn value="cancel" variant="outlined" class="tw-py-4">
                       CANCEL this Task (Abandon)
                     </v-btn>
 
-                    <v-btn value="complete" variant="outlined" color="primary">
+                    <v-btn value="complete" variant="outlined" class="tw-py-4">
                       COMPLETE this Task
                     </v-btn>
 
